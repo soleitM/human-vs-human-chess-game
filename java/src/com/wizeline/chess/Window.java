@@ -129,6 +129,13 @@ public class Window {
             textField.setText("");
             
             //TODO: Process input read from text field and redraw the board
+            String origin = input.substring(0,2);
+            String target = input.substring(2,4);
+            String piece = board.pieces.get(origin);
+            board.pieces.put(target, piece);
+            board.pieces.remove(origin);
+            outputLabel.setText("White Player's turn");
+            board.draw();
         }
     }
 }
