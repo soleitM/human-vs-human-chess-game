@@ -1,6 +1,7 @@
 package com.wizeline.chess.models;
 
 import com.wizeline.chess.exceptions.InvalidColorException;
+import com.wizeline.chess.exceptions.InvalidMoveException;
 import com.wizeline.chess.exceptions.InvalidPositionException;
 
 public abstract class Piece {
@@ -45,7 +46,13 @@ public abstract class Piece {
 		return position;
 	}
 
-	public void setPosition(String position){
+	private void setPosition(String position){
 		this.position = position;
 	}
+	
+	public void moveTo(String newPosition) throws InvalidMoveException {
+		if(canMoveTo(newPosition)) this.position = newPosition;
+	}
+
+	protected abstract boolean canMoveTo(String newPosition) throws InvalidMoveException;
 }

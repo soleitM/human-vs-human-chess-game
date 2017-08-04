@@ -2,21 +2,25 @@ package com.wizeline.chess.controllers;
 
 import com.wizeline.chess.Board;
 import com.wizeline.chess.exceptions.InvalidColorException;
+import com.wizeline.chess.exceptions.InvalidMoveException;
 import com.wizeline.chess.exceptions.InvalidPositionException;
 import com.wizeline.chess.models.Bishop;
 import com.wizeline.chess.models.King;
 import com.wizeline.chess.models.Knight;
 import com.wizeline.chess.models.Pawn;
+import com.wizeline.chess.models.Piece;
 import com.wizeline.chess.models.Queen;
 import com.wizeline.chess.models.Rook;
+import com.wizeline.chess.utilities.BoardPositionUtility;
 
 public class GameController {
 
 	
 	private Board board;
+	private BoardPositionUtility boardPositionUtility;
 
 	public GameController() {
-
+        boardPositionUtility = new BoardPositionUtility();
 	}
 
 	public void initializeBoard() throws InvalidColorException, InvalidPositionException {
@@ -86,6 +90,10 @@ public class GameController {
 	private void createQueens() throws InvalidColorException, InvalidPositionException {
 		board.pieces.put(Board.INITIAL_WHITE_QUEEN_POSITION, new Queen(Board.WHITE_PIECE,Board.INITIAL_WHITE_QUEEN_POSITION));
 	    board.pieces.put(Board.INITIAL_BLACK_QUEEN_POSITION, new Queen(Board.BLACK_PIECE,Board.INITIAL_BLACK_QUEEN_POSITION));
+	}
+	
+	public void makeMove(String origin, String target) throws InvalidMoveException{
+		boardPositionUtility.movePiece(board,origin,target);
 	}
 
 }

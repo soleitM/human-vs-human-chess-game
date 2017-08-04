@@ -14,6 +14,7 @@ import javax.swing.SwingConstants;
 
 import com.wizeline.chess.controllers.GameController;
 import com.wizeline.chess.exceptions.InvalidColorException;
+import com.wizeline.chess.exceptions.InvalidMoveException;
 import com.wizeline.chess.exceptions.InvalidPositionException;
 import com.wizeline.chess.models.Piece;
 
@@ -157,9 +158,12 @@ public class Window {
             //TODO: Process input read from text field and redraw the board
             String origin = input.substring(0,2);
             String target = input.substring(2,4);
-            Piece piece = board.pieces.get(origin);
-            board.pieces.put(target, piece);
-            board.pieces.remove(origin);
+            try {
+				gc.makeMove(origin, target);
+			} catch (InvalidMoveException e1) {
+				outputLabel.setText(e1.getMessage());
+			}
+            
             outputLabel.setText("White Player's turn");
             board.draw();
         }

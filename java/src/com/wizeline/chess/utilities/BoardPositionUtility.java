@@ -1,6 +1,7 @@
 package com.wizeline.chess.utilities;
 
 import com.wizeline.chess.Board;
+import com.wizeline.chess.models.Piece;
 
 public class BoardPositionUtility {
 	public boolean isOnBoard(String position) {
@@ -17,5 +18,14 @@ public class BoardPositionUtility {
 	private boolean withinVerticalBorders(int row) {
 		return (row >= 0 && row <= Board.ROWS);
 	}
+	
+	public void movePiece(Board board,String origin,String target) {
+		Piece movingPiece = board.pieces.get(origin);
+		//changePosition(movingPiece,target);
+        board.pieces.put(target, movingPiece);
+        board.pieces.remove(origin);
+	}
+
+		
 	
 }
