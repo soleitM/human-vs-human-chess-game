@@ -6,8 +6,8 @@ import com.wizeline.chess.models.Piece;;
 
 public class Pawn extends Piece {
 
-	public Pawn(String color, int row, int col) throws InvalidColorException, InvalidPositionException {
-		super(color, row, col);
+	public Pawn(String color, String position) throws InvalidColorException, InvalidPositionException {
+		super(color, position);
 		this.setCode(color + "P");
 		// TODO Auto-generated constructor stub
 	}

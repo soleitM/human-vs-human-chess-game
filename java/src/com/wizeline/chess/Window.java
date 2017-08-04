@@ -12,6 +12,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import com.wizeline.chess.controllers.GameController;
+import com.wizeline.chess.exceptions.InvalidColorException;
+import com.wizeline.chess.exceptions.InvalidPositionException;
+import com.wizeline.chess.models.Piece;
+
 /*
 The Window class handles the User Interface. It is divided in two sections:
 - The chess board which is handle by the Board class.
@@ -72,16 +77,37 @@ public class Window {
     public JLabel outputLabel;
     public JTextField textField;
     
+    GameController gc;
+    
     public Window() {
         initializeWindow();
+        gc = new GameController();
+        try {
+			gc.initializeBoard();
+		} catch (InvalidColorException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InvalidPositionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+        try {
+			gc.createPawns();
+		} catch (InvalidColorException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidPositionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
-        board = new Board();
+        board = gc.getBoard();
         //TODO: Add the pieces to the board
-        board.pieces.put("a8", "bR");
+        /*board.pieces.put("a8", "bR");
         board.pieces.put("b8", "bN");
         board.pieces.put("c8", "bB");
         board.pieces.put("d7", "bP");
-        board.pieces.put("e1", "wK");
+        board.pieces.put("e1", "wK");*/
         frame.add(board, BorderLayout.CENTER);
         
         initializeGraphicalComponents();
@@ -131,7 +157,7 @@ public class Window {
             //TODO: Process input read from text field and redraw the board
             String origin = input.substring(0,2);
             String target = input.substring(2,4);
-            String piece = board.pieces.get(origin);
+            Piece piece = board.pieces.get(origin);
             board.pieces.put(target, piece);
             board.pieces.remove(origin);
             outputLabel.setText("White Player's turn");

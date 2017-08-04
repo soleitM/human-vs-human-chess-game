@@ -11,6 +11,8 @@ import java.util.HashMap;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import com.wizeline.chess.models.Piece;
+
 @SuppressWarnings("serial")
 public class Board extends JPanel {
     public static final int ROWS = 8;
@@ -19,6 +21,24 @@ public class Board extends JPanel {
     public static final String BLACK_PIECE = "b";
     public static final String[] COLUMN_NAMES = 
         new String[] {"a", "b", "c", "d", "e", "f", "g", "h"};
+    
+	public static final int  INITIAL_WHITE_FRONT_ROW = 2;
+	public static final int INITIAL_BLACK_FRONT_ROW = 7;
+	public static final int INITIAL_WHITE_BACK_ROW = 1;
+	public static final int INITIAL_BLACK_BACK_ROW = 8;
+    
+    public static final String[] WHITE_CORNERS = {"a1","h1"};
+    public static final String[] BLACK_CORNERS = {"a8","h8"};
+    public static final String[] INITIAL_WHITE_KNIGHTS_POSITIONS = {"b1","g1"};
+    public static final String[] INITIAL_BLACK__KNIGHTS_POSITIONS = {"b8","g8"};
+    public static final String[] INITIAL_WHITE_BISHOPS_POSITIONS = {"c1","f1"};
+    public static final String[] INITIAL_BLACK_BISHOPS_POSITIONS = {"c8","f8"};
+    public static final String INITIAL_WHITE_QUEEN_POSITION = "d1";
+    public static final String INITIAL_BLACK_QUEEN_POSITION = "d8";
+    public static final String INITIAL_WHITE_KING_POSITION = "e1";
+    public static final String INITIAL_BLACK_KING_POSITION = "e8";
+    
+    
 	
     // Constants for graphics. These variables represent units measured in pixels
     private final int tileWidth = 60;
@@ -30,12 +50,14 @@ public class Board extends JPanel {
     
     private HashMap<String, BufferedImage> piecesImages;
     
-    public HashMap<String, String> pieces;
+    public HashMap<String, Piece> pieces;
     
     public Board() {
         loadImages();
         // Creating the map that will hold the pieces.
-        pieces = new HashMap<String, String>();
+        pieces = new HashMap<String, Piece>();
+       // System.out.println('b'-'a');
+        
     }
     
     private void loadImages() {
@@ -133,9 +155,9 @@ public class Board extends JPanel {
     	for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
             	if(pieces != null) {
-	                String piece = pieces.get(getChessNotation(row, col));
+	                Piece piece = pieces.get(getChessNotation(row, col));
 	                if(piece != null) {
-	                	graphics.drawImage(getImage(piece), calculateCoordinate(xOffset, tileWidth, col), 
+	                	graphics.drawImage(getImage(piece.getCode()), calculateCoordinate(xOffset, tileWidth, col), 
 							calculateCoordinate(yOffset, tileHeight, row), tileWidth, tileHeight, null);
 	                }
             	}
