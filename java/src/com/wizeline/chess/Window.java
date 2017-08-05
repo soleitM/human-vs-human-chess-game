@@ -92,15 +92,6 @@ public class Window {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-        try {
-			gc.createPawns();
-		} catch (InvalidColorException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidPositionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
         
         board = gc.getBoard();
         //TODO: Add the pieces to the board
@@ -158,11 +149,11 @@ public class Window {
             //TODO: Process input read from text field and redraw the board
             String origin = input.substring(0,2);
             String target = input.substring(2,4);
-            try {
-				gc.makeMove(origin, target);
-			} catch (InvalidMoveException e1) {
-				outputLabel.setText(e1.getMessage());
-			}
+            gc.makeMove(origin, target, outputLabel);
+            gc.checkKingChecked();
+            gc.checkCheckMate();
+            gc.checkStaleMate(); 
+            
             
             outputLabel.setText("White Player's turn");
             board.draw();

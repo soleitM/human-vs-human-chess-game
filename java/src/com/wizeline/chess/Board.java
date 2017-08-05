@@ -157,7 +157,7 @@ public class Board extends JPanel {
             	if(pieces != null) {
 	                Piece piece = pieces.get(getChessNotation(row, col));
 	                if(piece != null) {
-	                	graphics.drawImage(getImage(piece.getCode()), calculateCoordinate(xOffset, tileWidth, col), 
+	                	graphics.drawImage(getImage(piece.toString()), calculateCoordinate(xOffset, tileWidth, col), 
 							calculateCoordinate(yOffset, tileHeight, row), tileWidth, tileHeight, null);
 	                }
             	}
