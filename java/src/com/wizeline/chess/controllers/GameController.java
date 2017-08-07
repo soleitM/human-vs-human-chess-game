@@ -1,43 +1,61 @@
 package com.wizeline.chess.controllers;
 
-import javax.swing.JLabel;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Stack;
 
 import com.wizeline.chess.Board;
+import com.wizeline.chess.exceptions.GameControllerException;
 import com.wizeline.chess.exceptions.InvalidColorException;
 import com.wizeline.chess.exceptions.InvalidMoveException;
 import com.wizeline.chess.exceptions.InvalidPositionException;
-import com.wizeline.chess.models.Bishop;
 import com.wizeline.chess.models.Game;
 import com.wizeline.chess.models.King;
-import com.wizeline.chess.models.Knight;
 import com.wizeline.chess.models.Pawn;
 import com.wizeline.chess.models.Piece;
-import com.wizeline.chess.models.Queen;
-import com.wizeline.chess.models.Rook;
 import com.wizeline.chess.utilities.BoardMovementsUtility;
 import com.wizeline.chess.utilities.BoardPiecesUtility;
 import com.wizeline.chess.utilities.BoardPositionUtility;
+import com.wizeline.chess.validators.QueenMovement;
 
 public class GameController {
+
+	private static final String WHITE_PLAYER_TURN = "White Player's turn";
+	private static final String BLACK_PLAYER_TURN = "Black Player's turn";
+	private static final String GAME_OVER = "Game Over";
 
 	private Board board;
 	private PieceFactory pieceFactory;
 	private Game game;
+	private String message;
 	private BoardPositionUtility boardPositionUtility;
-	private BoardPiecesUtility boardPiecesUtility;
 	private BoardMovementsUtility boardMovementsUtility;
+	private BoardPiecesUtility boardPiecesUtility;
+	private MoveValidator moveValidator;
+	public MoveGenerator moveGenerator;
+	private HashMap<String, Piece> tempBoardCopy;
+	private HashMap<String, HashSet<String>> currentPossibleMoves;
+	private Stack<String> movesToUndo;
+	private Stack<String> movesToRedo;
 
 	public GameController() {
-		boardPositionUtility = new BoardPositionUtility();
-		boardPiecesUtility = new BoardPiecesUtility();
-		boardMovementsUtility = new BoardMovementsUtility();
+
 		game = new Game();
+		this.boardPositionUtility = new BoardPositionUtility();
+		this.boardMovementsUtility = new BoardMovementsUtility();
+		this.boardPiecesUtility = new BoardPiecesUtility();
+		currentPossibleMoves = new HashMap<>();
+		this.message = WHITE_PLAYER_TURN;
 	}
 
 	public void initializeBoard() throws InvalidColorException, InvalidPositionException {
-		board = new Board();
-		pieceFactory = new PieceFactory(board);
+		this.board = new Board();
+		this.pieceFactory = new PieceFactory(board);
+		this.moveGenerator = new MoveGenerator(this.board, this.game);
 		pieceFactory.initializePieces();
+		this.tempBoardCopy = new HashMap<>(this.board.pieces);
+		this.moveValidator = new MoveValidator(this.board.pieces);
+		currentPossibleMoves = moveGenerator.generateAllPossibleMoves(this.tempBoardCopy, game.getTurn());
 
 	}
 
@@ -45,139 +63,145 @@ public class GameController {
 		return board;
 	}
 
-	
-
-	public void makeMove(String origin, String target, JLabel outputLabel){
-		try {
-			validateOriginPosition(origin);
-			Piece movingPiece = board.pieces.get(origin);
-			validateMovingPiece(movingPiece);
-			validateTargetPosition(movingPiece, target);
-			char originCol = origin.charAt(0);
-			char originRow = origin.charAt(1);
-			char targetCol = target.charAt(0);
-			char targetRow = target.charAt(1);
-			validatePath(movingPiece, originCol, originRow, targetCol, targetRow);
-	        if(movingPiece.canMove(originCol, originRow, targetCol, targetRow)) {
-	        	movePiece(origin, target);	
-	        }
-		} catch(Exception e) {
-			e.printStackTrace();
+	public void makeMove(String origin, String target) throws GameControllerException {
+		if (game.getStatus() == Game.OVER || currentPossibleMoves.get(origin) == null
+				|| !currentPossibleMoves.get(origin).contains(target)) {
+			throw new InvalidMoveException("");
 		}
-		
-		
+
+		Piece movingPiece = board.getPiece(origin);
+		// Piece mayBeCaptured = board.getPiece(target);
+		char originCol = origin.charAt(0);
+		char originRow = origin.charAt(1);
+		char targetCol = target.charAt(0);
+		char targetRow = target.charAt(1);
+		if (movingPiece instanceof King
+				&& boardMovementsUtility.isCastlingLikeMovement(originCol, originRow, targetCol, targetRow)) {
+			moveValidator.makeCastling(origin, target);
+		} else if (moveValidator.isEnPassantMovement(target, originCol, originRow, targetCol, targetRow)) {
+			String enPassantPosition = boardPositionUtility.getCornerSquare(origin, target);
+			board.pieces.remove(enPassantPosition);
+			board.movePiece(origin, target);
+		} else {
+			board.movePiece(origin, target);
+		}
+
+		movingPiece.move();
+		switchTurn();
+		updateGameStatus(movingPiece, origin, target);
+		// movesToUndo.push(target+origin);
 	}
 
-	private void validatePath(Piece movingPiece, char originCol, char originRow, char targetCol, char targetRow) throws InvalidMoveException {
+	private void updateGameStatus(Piece movingPiece, String origin, String target) {
 		// TODO Auto-generated method stub
-		if(movingPiece.canBeBlocked()) {
-			checkForAnyPieceAlongThePath(originCol, originRow, targetCol, targetRow);
+		if (movingPiece instanceof Pawn) {
+			updatePawnStatus((Pawn) movingPiece, origin, target);
 		}
-		
+		this.tempBoardCopy = new HashMap<String, Piece>(this.board.pieces);
+		currentPossibleMoves = moveGenerator.generateAllPossibleMoves(this.tempBoardCopy, game.getTurn());
+		boolean currentKingOnCheck = moveValidator.isCurrentKingOnCheck(game.getTurn());
+		if (currentKingOnCheck) {
+			declareCheckEvent();
+		}
+		if (checkMate(currentKingOnCheck)) {
+			game.end(Game.OVER);
+		} else if (staleMate(currentKingOnCheck)) {
+			game.end(Game.DRAW);
+		}
+		if (!currentKingOnCheck) {
+			defaultSetMessage();
+		}
+
 	}
 
-	private void checkForAnyPieceAlongThePath(char originCol, char originRow, char targetCol, char targetRow) throws InvalidMoveException {
+	private void defaultSetMessage() {
 		// TODO Auto-generated method stub
-//		if(boardMovementsUtility.isHorizontalMovement(originCol, originRow, targetCol, targetRow)) {
-//			checkHorizontalPath(originRow,originCol,targetCol);
-//		}
-//		else if(boardMovementsUtility.isVerticalMovement(originCol, originRow, targetCol, targetRow)) {
-//			checkVerticalPath(originCol, originRow, targetRow);
-//		}
-//		else {
-//			checkDiagonalPath(originCol, originRow, targetCol, targetRow);
-//		}
-		int verticalDirection = boardMovementsUtility.getDirection(originRow, targetRow);
-		int horizontalDirection = boardMovementsUtility.getDirection(originCol, targetCol);
-		for(char col = originCol, row = originRow; col != targetCol || row != targetRow; col += horizontalDirection, row += verticalDirection) {
-			if(occupied(String.format("%c%c",col, row))) {
-				throw new InvalidMoveException("Path is not clear");
+		if (game.getStatus() == Game.ACTIVE) {
+			setMessage((game.getTurn().equals(Game.WHITE_TURN)) ? WHITE_PLAYER_TURN : BLACK_PLAYER_TURN);
+		} else if (game.getStatus() == Game.OVER) {
+			setMessage(
+					GAME_OVER + (game.getWinner().equals(Game.WHITE_TURN) ? " White Player won" : "Black Player won"));
+		} else {
+			setMessage(GAME_OVER + " Draw");
+		}
+	}
+
+	private void declareCheckEvent() {
+		String player = game.getTurn().equals(Game.WHITE_TURN) ? "White Player " : "Black Player ";
+		setMessage(player + "on Check");
+
+	}
+
+	private void setMessage(String s) {
+		this.message = s;
+
+	}
+
+	private void updatePawnStatus(Pawn pawn, String origin, String target) {
+		if (boardMovementsUtility.isDoubleMoveForward(origin, target)) {
+			pawn.markEnPassant();
+		}
+		if (isEligibleToPromote(pawn, target)) {
+			boardPiecesUtility.promote(pawn, new QueenMovement());
+		}
+	}
+
+	private boolean isEligibleToPromote(Piece piece, String position) {
+		// TODO Auto-generated method stub
+		char rank = position.charAt(1);
+		return (piece.getColor().equals(Board.WHITE_PIECE)) ? rank == Board.INITIAL_BLACK_BACK_ROW
+				: rank == Board.INITIAL_WHITE_BACK_ROW;
+	}
+
+	private void switchTurn() {
+		game.switchTurn();
+		terminateCurrentEnPassant();
+	}
+
+	private boolean checkMate(boolean currentKingOnCheck) {
+		return currentKingOnCheck && noValidMoves();
+	}
+
+	private boolean staleMate(boolean currentKingOnCheck) {
+		return !currentKingOnCheck && noValidMoves();
+
+	}
+
+	private boolean noValidMoves() {
+		return currentPossibleMoves.isEmpty();
+	}
+
+	private void terminateCurrentEnPassant() {
+		String row = (game.getTurn().equals(Game.WHITE_TURN)) ? "4" : "5";
+		for (String col : Board.COLUMN_NAMES) {
+			String position = col + row;
+			Piece piece = board.getPiece(position);
+			if (piece != null && piece instanceof Pawn) {
+				Pawn pawn = (Pawn) piece;
+				pawn.unMarkEnPassant();
 			}
 		}
 	}
 
-	private void checkDiagonalPath(char originCol, char originRow, char targetCol, char targetRow) {
-		// TODO Auto-generated method stub
-		
-		
-	}
+	// TODO: Complete Undo Function
+	public void undo() {
+		if (!movesToUndo.isEmpty()) {
+			String move = movesToUndo.pop();
+			String origin = move.substring(0, 2);
+			String target = move.substring(2, 4);
 
-	private void checkVerticalPath(char originCol, char originRow, char targetRow) throws InvalidMoveException {
-		// TODO Auto-generated method stub
-		int direction = (targetRow - originRow > 0) ? 1 : -1;
-		for(char row = originRow; row != targetRow; row+=direction) {
-			if(occupied(String.format("%c%c",originCol, row))) {
-				throw new InvalidMoveException("Path is not clear");
-			}
+			movesToRedo.push(target + origin);
 		}
-	}
-
-	private void checkHorizontalPath(char originRow, char originCol, char targetCol) throws InvalidMoveException {
-		// TODO Auto-generated method stub
-		int direction = (targetCol - originCol > 0) ? 1 : -1;
-		for(char col = originCol; col != targetCol; col+=direction) {
-			if(occupied(String.format("%c%c", col,originRow))) {
-				throw new InvalidMoveException("Path is not clear");
-			}
-		}
-	}
-
-	private void validateTargetPosition(Piece movingPiece, String target) throws InvalidMoveException {
-		
-		if(!occupied(target)) return;
-		Piece capturedPiece = board.pieces.get(target);
-		validateCapturedPiece(movingPiece,capturedPiece);
-	}
-
-	private void validateCapturedPiece(Piece movingPiece, Piece capturedPiece) throws InvalidMoveException {
-	
-		if(boardPiecesUtility.sameTeam(movingPiece, capturedPiece)) {
-			throw new InvalidMoveException("The piece at Target Position belongs to you");
-		}
-		
-	}
-
-	private void movePiece(String origin, String target) {
-		Piece movingPiece = board.pieces.get(origin);
-		//changePosition(movingPiece,target);
-        board.pieces.put(target, movingPiece);
-        board.pieces.remove(origin);
-		
-	}
-
-	private void validateOriginPosition(String origin) throws InvalidPositionException, InvalidMoveException{
-		// TODO Auto-generated method stub
-		if(!boardPositionUtility.isOnBoard(origin)) {
-			throw new InvalidPositionException("Origin Position is not on board");
-		}
-		if(!occupied(origin)) {
-			throw new InvalidPositionException("Origin Position has no piece to move");
-		}
-	}
-
-	private void validateMovingPiece(Piece piece) throws InvalidMoveException {
-		if(!(piece.getColor().equals(game.getTurn()))) {
-			throw new InvalidMoveException("The piece at Origin Position does not belong to you");
-		}
-	}
-
-	private boolean occupied(String position) {
-		return board.pieces.containsKey(position);
-	}
-
-	public void checkKingChecked() {
-		// TODO Auto-generated method stub
 
 	}
 
-	public void checkCheckMate() {
-		// TODO Auto-generated method stub
-
+	public Game getGame() {
+		return this.game;
 	}
 
-	public void checkStaleMate() {
-		// TODO Auto-generated method stub
+	public String getMessage() {
 
+		return this.message;
 	}
 
 }

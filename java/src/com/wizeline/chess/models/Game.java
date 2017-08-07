@@ -1,43 +1,51 @@
 package com.wizeline.chess.models;
 
-import javax.swing.JLabel;
-
 public class Game {
-   public static final String WHITE_TURN = "w";
-   public static final String BLACK_TURN = "b";
-   
-   private String turn;
-   private Player whitePlayer;
-   private Player blackPlayer;
-   
-   public Game() {
-	   whitePlayer = new Player();
-	   blackPlayer = new Player();
-	   this.turn = WHITE_TURN;
-   }
+	public static final String WHITE_TURN = "w";
+	public static final String BLACK_TURN = "b";
+	public static final int ACTIVE = 1;
+	public static final int DRAW = 0;
+	public static final int OVER = 2;
 
-public String getTurn() {
-	return turn;
-}
+	private String turn;
+	private int status;
 
-public void setTurn(String turn) {
-	this.turn = turn;
-}
-   
-public void changeTurn(JLabel outputLabel) {
-	turn = (turn.equals(WHITE_TURN)) ? BLACK_TURN : WHITE_TURN;
-	
-	showWhoseTurnOnLabel(outputLabel);
-}
+	public Game() {
 
-private void showWhoseTurnOnLabel(JLabel outputLabel) {
-	if(turn.equals(WHITE_TURN)) {
-		outputLabel.setText("White Player's turn");
+		setStatus(ACTIVE);
+		setTurn(WHITE_TURN);
 	}
-	else {
-		outputLabel.setText("Black Player's turn");
+
+	public String getTurn() {
+		return turn;
 	}
-	
-}
+
+	private void setTurn(String turn) {
+		this.turn = turn;
+	}
+
+	public void switchTurn() {
+		setTurn(turn.equals(WHITE_TURN) ? BLACK_TURN : WHITE_TURN);
+	}
+
+	public String nextTurn() {
+		return (turn.equals(WHITE_TURN)) ? BLACK_TURN : WHITE_TURN;
+	}
+
+	public int getStatus() {
+		return status;
+	}
+
+	private void setStatus(int status) {
+		this.status = status;
+	}
+
+	public String getWinner() {
+		return status == OVER ? nextTurn() : null;
+	}
+
+	public void end(int status) {
+		setStatus(status);
+	}
 
 }

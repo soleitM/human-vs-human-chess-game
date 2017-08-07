@@ -8,6 +8,12 @@ public class KnightMovement extends PieceMovement implements MovementValidator {
 		return utility.isKnightMovement(originCol, originRow, targetCol, targetRow);
 	}
 
+	@Override
+	public boolean canMove(char originCol, char originRow, char targetCol, char targetRow, int direction,
+			boolean specialMove) {
+		return canMove(originCol, originRow, targetCol, targetRow, direction);
+	}
+
 	
 
 }

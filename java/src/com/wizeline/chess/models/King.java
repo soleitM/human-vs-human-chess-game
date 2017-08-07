@@ -5,8 +5,12 @@ import com.wizeline.chess.exceptions.InvalidPositionException;
 import com.wizeline.chess.validators.KingMovement;
 
 public class King extends Piece {
-	public King(String color, String position) throws InvalidColorException, InvalidPositionException {
-		super(color, position);
+
+	private boolean moved;
+
+	public King(String color) throws InvalidColorException, InvalidPositionException {
+		super(color);
+		this.moved = false;
 		this.setMovementValidator(new KingMovement());
 		// TODO Auto-generated constructor stub
 	}
@@ -18,11 +22,27 @@ public class King extends Piece {
 	}
 
 	@Override
-	public boolean canMove(char originCol, char originRow, char targetCol, char targetRow) {
+	public boolean canMove(char originCol, char originRow, char targetCol, char targetRow, boolean specialMove) {
 		// TODO Auto-generated method stub
-		return movementValidator.canMove(originCol, originRow, targetCol, targetRow, 0);
+		return movementValidator.canMove(originCol, originRow, targetCol, targetRow, 0, specialMove && !this.moved);
 	}
 
-	
+//	public boolean canCastle() {
+//		return (!this.moved) && (!this.onCheck);
+//	}
 
+
+//	public void onCheck() {
+//		this.onCheck = true;
+//	}
+//
+//	public void unCheck() {
+//		this.onCheck = false;
+//	}
+
+	@Override
+	public void move() {
+		// TODO Auto-generated method stub
+		this.moved = true;
+	}
 }

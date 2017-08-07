@@ -7,6 +7,12 @@ public class PawnMovement extends PieceMovement implements MovementValidator {
 		return utility.isPawnMovement(originCol, originRow, targetCol, targetRow, direction);
 	}
 
-	
+	@Override
+	public boolean canMove(char originCol, char originRow, char targetCol, char targetRow, int direction,
+			boolean specialMove) {
+		// TODO Auto-generated method stub
+		return (specialMove) ? utility.isPawnCaptureMovement(originCol, originRow, targetCol, targetRow, direction) :
+			canMove(originCol, originRow, targetCol, targetRow, direction);
+	}
 
 }

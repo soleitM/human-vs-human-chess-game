@@ -6,8 +6,8 @@ import com.wizeline.chess.exceptions.InvalidPositionException;
 import com.wizeline.chess.validators.QueenMovement;
 
 public class Queen extends Piece {
-	public Queen(String color, String position) throws InvalidColorException, InvalidPositionException {
-		super(color, position);
+	public Queen(String color) throws InvalidColorException, InvalidPositionException {
+		super(color);
 		setMovementValidator(new QueenMovement());
 		// TODO Auto-generated constructor stub
 	}
@@ -19,9 +19,15 @@ public class Queen extends Piece {
 	}
 
 	@Override
-	public boolean canMove(char originCol, char originRow, char targetCol, char targetRow) {
+	public boolean canMove(char originCol, char originRow, char targetCol, char targetRow, boolean specialMove) {
 		// TODO Auto-generated method stub
 		return movementValidator.canMove(originCol, originRow, targetCol, targetRow, 0);
+	}
+
+	@Override
+	public void move() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	

@@ -8,6 +8,13 @@ public class RookMovement extends PieceMovement implements MovementValidator {
 		return utility.isRookMovement(originCol, originRow, targetCol, targetRow);
 	}
 
+	@Override
+	public boolean canMove(char originCol, char originRow, char targetCol, char targetRow, int direction,
+			boolean captureMove) {
+		// TODO Auto-generated method stub
+		return canMove(originCol, originRow, targetCol, targetRow, direction);
+	}
+
 	
 
 }

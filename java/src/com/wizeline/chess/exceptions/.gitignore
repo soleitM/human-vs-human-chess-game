@@ -1,2 +1,8 @@
 /InvalidColorException.class
 /InvalidPositionException.class
+/ChessGameException.class
+/GameControllerException.class
+/InvalidCastlingException.class
+/InvalidPawnCaptureException.class
+/KingOnCheckException.class
+/MoveValidatorException.class

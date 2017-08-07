@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -13,10 +14,9 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import com.wizeline.chess.controllers.GameController;
+import com.wizeline.chess.exceptions.GameControllerException;
 import com.wizeline.chess.exceptions.InvalidColorException;
-import com.wizeline.chess.exceptions.InvalidMoveException;
 import com.wizeline.chess.exceptions.InvalidPositionException;
-import com.wizeline.chess.models.Piece;
 
 /*
 The Window class handles the User Interface. It is divided in two sections:
@@ -70,93 +70,93 @@ Some rules to remember:
 */
 
 public class Window {
-    private Board board;
-    private JPanel bottomPanel;
-    private JButton submitButton;
-    private JFrame frame;
-    
-    public JLabel outputLabel;
-    public JTextField textField;
-    
-    GameController gc;
-    
-    public Window() {
-        initializeWindow();
-        gc = new GameController();
-        try {
+	private Board board;
+	private JPanel bottomPanel;
+	private JButton submitButton;
+	private JFrame frame;
+
+	public JLabel outputLabel;
+	public JTextField textField;
+	GameController gc;
+
+	public Window() {
+		initializeWindow();
+		gc = new GameController();
+		try {
 			gc.initializeBoard();
 		} catch (InvalidColorException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (InvalidPositionException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-        
-        board = gc.getBoard();
-        //TODO: Add the pieces to the board
-        /*board.pieces.put("a8", "bR");
-        board.pieces.put("b8", "bN");
-        board.pieces.put("c8", "bB");
-        board.pieces.put("d7", "bP");
-        board.pieces.put("e1", "wK");*/
-        frame.add(board, BorderLayout.CENTER);
-        
-        initializeGraphicalComponents();
-        displayWindow();
-    }
 
-    private void initializeWindow() {
-        frame = new JFrame("Chess");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-    }
+		board = gc.getBoard();
+		frame.add(board, BorderLayout.CENTER);
 
-    private void initializeGraphicalComponents() {
-        // Creating the bottom panel that will hold the 
-        // output text label, input text and submit button
-        bottomPanel = new JPanel(new BorderLayout());
-        outputLabel = new JLabel("Output text in this label", SwingConstants.CENTER);
-        bottomPanel.add(outputLabel, BorderLayout.NORTH);
-        
-        InputActionListener inputListener = new InputActionListener();
-        JPanel inputPanel = new JPanel(new FlowLayout());
-        JLabel inputLabel = new JLabel("Input: ");
-        textField = new JTextField(30);
-        textField.addActionListener(inputListener);
-        inputPanel.add(inputLabel);
-        inputPanel.add(textField);
-        bottomPanel.add(inputPanel, BorderLayout.CENTER);
-        
-        submitButton = new JButton("Submit");
-        submitButton.addActionListener(inputListener);
-        bottomPanel.add(submitButton, BorderLayout.SOUTH);
-        frame.add(bottomPanel, BorderLayout.SOUTH);
-    }
+		initializeGraphicalComponents();
+		displayWindow();
+		outputLabel.setText(gc.getMessage());
+	}
 
-    private void displayWindow() {
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
-	
-    private class InputActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            // Text is read from the input field and input field is cleared
-            String input = textField.getText();
-            textField.setText("");
-            
-            //TODO: Process input read from text field and redraw the board
-            String origin = input.substring(0,2);
-            String target = input.substring(2,4);
-            gc.makeMove(origin, target, outputLabel);
-            gc.checkKingChecked();
-            gc.checkCheckMate();
-            gc.checkStaleMate(); 
-            
-            
-            outputLabel.setText("White Player's turn");
-            board.draw();
-        }
-    }
+	private void initializeWindow() {
+		frame = new JFrame("Chess");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setResizable(false);
+	}
+
+	private void initializeGraphicalComponents() {
+		// Creating the bottom panel that will hold the
+		// output text label, input text and submit button
+		bottomPanel = new JPanel(new BorderLayout());
+		outputLabel = new JLabel("Output text in this label", SwingConstants.CENTER);
+		bottomPanel.add(outputLabel, BorderLayout.NORTH);
+
+		InputActionListener inputListener = new InputActionListener();
+		JPanel inputPanel = new JPanel(new FlowLayout());
+		JLabel inputLabel = new JLabel("Input: ");
+		textField = new JTextField(30);
+		textField.addActionListener(inputListener);
+		inputPanel.add(inputLabel);
+		inputPanel.add(textField);
+		bottomPanel.add(inputPanel, BorderLayout.CENTER);
+
+		submitButton = new JButton("Submit");
+		submitButton.addActionListener(inputListener);
+		bottomPanel.add(submitButton, BorderLayout.SOUTH);
+		frame.add(bottomPanel, BorderLayout.SOUTH);
+	}
+
+	private void displayWindow() {
+		frame.pack();
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+	}
+
+	private class InputActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			// Text is read from the input field and input field is cleared
+			String input = textField.getText();
+			if (input.equals("s")) {
+				try {
+					board.save();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				return;
+			}
+			textField.setText("");
+
+			// TODO: Process input read from text field and redraw the board
+			String origin = input.substring(0, 2);
+			String target = input.substring(2, 4);
+			try {
+				gc.makeMove(origin, target);
+			} catch (GameControllerException exception) {
+				outputLabel.setText(exception.getMessage());
+			}
+			board.draw();
+			outputLabel.setText(gc.getMessage());
+
+		}
+	}
 }
